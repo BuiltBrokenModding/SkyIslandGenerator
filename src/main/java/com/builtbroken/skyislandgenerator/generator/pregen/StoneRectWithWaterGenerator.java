@@ -17,25 +17,26 @@ public class StoneRectWithWaterGenerator extends FlatPlatformGenerator
     @Override
     public void generate(World world, int sx, int y, int sz)
     {
+        generate_a(world, sx - 8, y, sz - 8);
+    }
+
+    public void generate_a(World world, int sx, int y, int sz)
+    {
+        genPlatform(world, sx, y, sz);
         //Generate cobble stone markers for spacing check
-        for (int i = 0; i < 5; i++)
+        for (int i = 0; i < 4; i++)
         {
-            world.setBlock(sx + 3, y + 1, sz + 2 + (i * 4), Blocks.cobblestone);
-            world.setBlock(sx + 7, y + 1, sz + 2 + (i * 4), Blocks.cobblestone);
+            world.setBlock(sx + 2, y + 1, sz + 3 + (i * 4), Blocks.cobblestone);
+            world.setBlock(sx + 6, y + 1, sz + 3 + (i * 4), Blocks.cobblestone);
         }
 
         //Generate water pool
         for (int i = 0; i < 3; i++)
         {
-            world.setBlock(sx + 4 + i, y + 1, sz + 4, Blocks.flowing_water);
-            world.setBlock(sx + 4 + i, y + 1, sz + 5, Blocks.flowing_water);
-        }
-
-        //Generate dirt pad for growing trees
-        for (int i = 0; i < 3; i++)
-        {
-            world.setBlock(sx + 15 + i, y + 1, sz + 4, Blocks.dirt);
-            world.setBlock(sx + 15 + i, y + 1, sz + 5, Blocks.dirt);
+            world.setBlock(sx + 3 + i, y + 1, sz + 4, Blocks.flowing_water);
+            world.setBlock(sx + 3 + i, y + 1, sz + 5, Blocks.flowing_water);
+            world.setBlock(sx + 3 + i, y + 1, sz + 13, Blocks.dirt);
+            world.setBlock(sx + 3 + i, y + 1, sz + 14, Blocks.dirt);
         }
     }
 }
