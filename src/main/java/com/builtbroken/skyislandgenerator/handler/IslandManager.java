@@ -42,7 +42,7 @@ public class IslandManager
 
     private IslandManager()
     {
-        MinecraftForge.EVENT_BUS.register(this);
+
     }
 
     public void registerGenerator(String name, IslandGenerator gen)
@@ -69,15 +69,18 @@ public class IslandManager
             }
             for (IslandLocation location : islandMap.keySet())
             {
+                System.out.println("It: " + location);
                 int originX = (location.x << 4) + 8;
                 int originZ = (location.z << 4) + 8;
 
                 Collections.shuffle(dirs);
                 for (ForgeDirection dir : dirs)
                 {
+                    System.out.println("\tD: " + dir);
                     int nextX = (originX + dir.offsetX * SkyIslandGenerator.DISTANCE_BETWEEN_ISLANDS) >> 4;
                     int nextZ = (originZ + dir.offsetZ * SkyIslandGenerator.DISTANCE_BETWEEN_ISLANDS) >> 4;
                     IslandLocation newLocation = new IslandLocation(nextX, nextZ);
+                    System.out.println("\tN: " + newLocation);
                     if (!isLocationAlreadyInUse(newLocation))
                     {
                         nextLocations.add(newLocation);
@@ -90,7 +93,7 @@ public class IslandManager
 
     public IslandLocation getNewIslandLocation()
     {
-        if (nextLocations.size() != 0)
+        if (!nextLocations.isEmpty())
         {
             return nextLocations.get(0);
         }
@@ -102,7 +105,7 @@ public class IslandManager
         if (islandMap.containsKey(location)) return true;
         for (IslandLocation loc : islandMap.keySet())
         {
-            if ((Math.abs(loc.x - location.x) << 4) <= SkyIslandGenerator.DISTANCE_BETWEEN_ISLANDS || (Math.abs(loc.z - location.z) << 4) <= SkyIslandGenerator.DISTANCE_BETWEEN_ISLANDS)
+            if (Math.abs((loc.x << 4) - (location.x << 4)) <= SkyIslandGenerator.DISTANCE_BETWEEN_ISLANDS && Math.abs((loc.z << 4) - (location.z << 4)) <= SkyIslandGenerator.DISTANCE_BETWEEN_ISLANDS)
             {
                 return true;
             }

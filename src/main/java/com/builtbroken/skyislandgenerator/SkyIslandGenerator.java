@@ -124,6 +124,8 @@ public class SkyIslandGenerator
         manager.registerGenerator("chunkFlat", new FlatPlatformGenerator(Blocks.dirt, 16, 16, 3));
         manager.registerGenerator("stonebrickPlatform", new StoneRectWithWaterGenerator());
         manager.registerGenerator("tree", new BlockWithTreeGenerator());
+
+        FMLCommonHandler.instance().bus().register(manager);
     }
 
     @SubscribeEvent
