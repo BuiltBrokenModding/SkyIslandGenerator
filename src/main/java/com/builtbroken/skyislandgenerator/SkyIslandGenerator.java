@@ -54,7 +54,7 @@ public class SkyIslandGenerator
 
     public static Configuration config;
     public static int DISTANCE_BETWEEN_ISLANDS = 1000;
-    public static int DEFAULT_Y_GENERATION_LEVEL = 20;
+    public static int DEFAULT_Y_GENERATION_LEVEL = 70;
     public static int MIN_RANDOM_Y = 5;
     public static int MAX_RANDOM_Y = 5;
     public static boolean RANDOMIZE_Y_LEVEL = true;

@@ -5,10 +5,15 @@ import com.builtbroken.skyislandgenerator.handler.IslandData;
 import com.builtbroken.skyislandgenerator.handler.IslandManager;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
+import net.minecraft.command.PlayerNotFoundException;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.ChatComponentText;
 import net.minecraft.world.World;
 import net.minecraftforge.common.DimensionManager;
+
+import java.util.List;
 
 /**
  * Created by Dark on 8/12/2015.
@@ -36,11 +41,13 @@ public class CommandGenerate extends CommandBase
             if (sender instanceof EntityPlayer)
                 sender.addChatMessage(new ChatComponentText("/sig genIsland <type> <chunkX> <chunkZ>"));
             sender.addChatMessage(new ChatComponentText("/sig genIsland <type> <dim> <chunkX> <chunkZ>"));
+            sender.addChatMessage(new ChatComponentText("/sig newIslandForPlayer <player> <type>"));
             if (sender instanceof EntityPlayer)
             {
                 sender.addChatMessage(new ChatComponentText("/sig newIsland <type> - Created a new Island and teleports you to it"));
                 sender.addChatMessage(new ChatComponentText("/sig abandonIsland [True] - True will erase edited chunk"));
             }
+
         }
         else if (args[0].equalsIgnoreCase("abandonIsland") && sender instanceof EntityPlayer)
         {
@@ -103,6 +110,45 @@ public class CommandGenerate extends CommandBase
                 for (String name : IslandManager.INSTANCE.islandTypeMap.keySet())
                 {
                     sender.addChatMessage(new ChatComponentText("  " + name));
+                }
+            }
+        }
+        else if (args[0].equalsIgnoreCase("newIslandForPlayer"))
+        {
+            if (args.length < 3)
+            {
+                sender.addChatMessage(new ChatComponentText("/sig newIslandForPlayer <player> <type>"));
+            }
+            else
+            {
+                String userName = args[1];
+                if (IslandManager.INSTANCE.islandTypeMap.containsKey(args[2]))
+                {
+                    EntityPlayerMP player = getPlayer(sender, userName);
+
+                    if (player == null)
+                    {
+                        throw new PlayerNotFoundException();
+                    }
+                    if (!IslandManager.INSTANCE.playerToIslandMap.containsKey(player.getGameProfile().getId()))
+                    {
+                        if (!IslandManager.INSTANCE.newIsland((EntityPlayer) sender, args[1], true))
+                        {
+                            sender.addChatMessage(new ChatComponentText("Error: Something went wrong while generating your new island"));
+                        }
+                        else
+                        {
+                            sender.addChatMessage(new ChatComponentText("Island created for player " + userName));
+                        }
+                    }
+                    else
+                    {
+                        sender.addChatMessage(new ChatComponentText("Error: Player already has an island"));
+                    }
+                }
+                else
+                {
+                    sender.addChatMessage(new ChatComponentText("Error: Unknown generator type " + args[2]));
                 }
             }
         }
@@ -194,5 +240,17 @@ public class CommandGenerate extends CommandBase
         {
             sender.addChatMessage(new ChatComponentText("Error: Unknown command " + args[0]));
         }
+    }
+
+    @Override
+    public List addTabCompletionOptions(ICommandSender sender, String[] args)
+    {
+        return args.length == 3 && args[1].equalsIgnoreCase("newIslandForPlayer") ? getListOfStringsMatchingLastWord(args, MinecraftServer.getServer().getAllUsernames()) : null;
+    }
+
+    @Override
+    public boolean isUsernameIndex(String[] args, int index)
+    {
+        return args.length == 3 && args[1].equalsIgnoreCase("newIslandForPlayer") && index == 2;
     }
 }
