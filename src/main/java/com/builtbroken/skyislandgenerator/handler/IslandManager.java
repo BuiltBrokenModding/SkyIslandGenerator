@@ -5,6 +5,7 @@ import com.builtbroken.skyislandgenerator.generator.IslandGenerator;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.world.World;
+import net.minecraftforge.common.MinecraftForge;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,7 +25,10 @@ public class IslandManager
     private int gridIterationX = 0;
     private int gridIterationZ = 0;
 
-    private IslandManager() {}
+    private IslandManager()
+    {
+        MinecraftForge.EVENT_BUS.register(this);
+    }
 
     public void registerGenerator(String name, IslandGenerator gen)
     {

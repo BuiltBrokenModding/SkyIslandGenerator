@@ -1,14 +1,15 @@
-package com.builtbroken.skyislandgenerator.generator;
+package com.builtbroken.skyislandgenerator.world;
 
 import com.builtbroken.skyislandgenerator.SkyIslandGenerator;
-import com.builtbroken.skyislandgenerator.handler.IslandManager;
 import net.minecraft.entity.EnumCreatureType;
+import net.minecraft.init.Blocks;
 import net.minecraft.util.IProgressUpdate;
 import net.minecraft.world.ChunkPosition;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 import java.util.List;
 
@@ -42,20 +43,31 @@ public class ChunkProviderEmpty implements IChunkProvider
         //Init spawn if it has not already been created
         if ((this.worldObj.getSpawnPoint().posX >> 4) == chunkX && (this.worldObj.getSpawnPoint().posZ >> 4) == chunkZ)
         {
-            IslandManager.INSTANCE.newIsland(this.worldObj, chunkX, chunkZ, "chunkFlat", false);
+            //Generate spawn platform
+            int k = SkyIslandGenerator.DEFAULT_Y_GENERATION_LEVEL;
+            int l = SkyIslandGenerator.DEFAULT_Y_GENERATION_LEVEL >> 4;
+            ExtendedBlockStorage extendedblockstorage = chunk.getBlockStorageArray()[l];
+
+            if (extendedblockstorage == null)
+            {
+                extendedblockstorage = new ExtendedBlockStorage(k, !this.worldObj.provider.hasNoSky);
+                chunk.getBlockStorageArray()[l] = extendedblockstorage;
+            }
+
+            for (int cx = 0; cx < 16; ++cx)
+            {
+                for (int cz = 0; cz < 16; ++cz)
+                {
+                    extendedblockstorage.func_150818_a(cx, k & 15, cz, Blocks.dirt);
+                    //extendedblockstorage.setExtBlockMetadata(cx, k & 15, cz, 0);
+                }
+            }
 
             //Fix spawn point
             int x = (chunkX << 4) + 8;
             int z = (chunkZ << 4) + 8;
-            int y = SkyIslandGenerator.DEFAULT_Y_GENERATION_LEVEL;
-            while (y < 255)
-            {
-                if (this.worldObj.getBlock(x, y, z).isAir(this.worldObj, x, y, z))
-                {
-                    break;
-                }
-                y++;
-            }
+            int y = SkyIslandGenerator.DEFAULT_Y_GENERATION_LEVEL + 2;
+
             this.worldObj.setSpawnLocation(x, y, z);
         }
 
