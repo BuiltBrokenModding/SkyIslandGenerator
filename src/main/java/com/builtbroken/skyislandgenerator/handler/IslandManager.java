@@ -110,34 +110,44 @@ public class IslandManager
         return false;
     }
 
-    public void newIsland(EntityPlayer player, int chunkX, int chunkZ, String chunkFlat, boolean random)
+    public boolean newIsland(EntityPlayer player, String chunkFlat, boolean random)
     {
-        IslandLocation location = newIsland(player.worldObj, chunkX, chunkZ, chunkFlat, random);
-        if (location != null)
+        IslandLocation l = getNewIslandLocation();
+        if (l != null)
         {
-            int x = (chunkX << 4) + 8;
-            int z = (chunkZ << 4) + 8;
-            int y = 0;
-            islandMap.put(location, new IslandData(player));
-            MovingObjectPosition mop = player.worldObj.rayTraceBlocks(Vec3.createVectorHelper(x + 0.5, 255, z + 0.5), Vec3.createVectorHelper(x + 0.5, 0, z + 0.5));
-            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
+            IslandLocation location = newIsland(player.worldObj, l, chunkFlat, random);
+            if (location != null)
             {
-                player.setSpawnChunk(new ChunkCoordinates(x, mop.blockY + 1, z), true);
-                player.setPositionAndUpdate(x, y, z);
+                int x = (l.x << 4) + 8;
+                int z = (l.z << 4) + 8;
+                int y = 0;
+                islandMap.put(location, new IslandData(player));
+                MovingObjectPosition mop = player.worldObj.rayTraceBlocks(Vec3.createVectorHelper(x + 0.5, 255, z + 0.5), Vec3.createVectorHelper(x + 0.5, 0, z + 0.5));
+                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
+                {
+                    player.setSpawnChunk(new ChunkCoordinates(x, mop.blockY + 1, z), true);
+                    player.setPositionAndUpdate(x, y, z);
+                }
+                return true;
             }
         }
+        return false;
     }
 
     public IslandLocation newIsland(World worldObj, int x, int z, String chunkFlat, boolean random)
     {
-        IslandLocation location = new IslandLocation(x, z);
+        return newIsland(worldObj, new IslandLocation(x, z), chunkFlat, random);
+    }
+
+    public IslandLocation newIsland(World worldObj, IslandLocation location, String chunkFlat, boolean random)
+    {
         if (islandTypeMap.containsKey(chunkFlat))
         {
             IslandGenerator gen = islandTypeMap.get(chunkFlat);
             if (random)
-                gen.generateNoRandom(worldObj, x, z);
+                gen.generateNoRandom(worldObj, location.x, location.z);
             else
-                gen.generate(worldObj, x, z);
+                gen.generate(worldObj, location.x, location.z);
 
             islandMap.put(location, null);
             return location;

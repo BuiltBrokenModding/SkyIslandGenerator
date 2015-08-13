@@ -1,7 +1,6 @@
 package com.builtbroken.skyislandgenerator.command;
 
 import com.builtbroken.skyislandgenerator.generator.IslandGenerator;
-import com.builtbroken.skyislandgenerator.handler.IslandLocation;
 import com.builtbroken.skyislandgenerator.handler.IslandManager;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.ICommandSender;
@@ -38,7 +37,6 @@ public class CommandGenerate extends CommandBase
             sender.addChatMessage(new ChatComponentText("/sig genIsland <type> <dim> <chunkX> <chunkZ>"));
             if (sender instanceof EntityPlayer)
                 sender.addChatMessage(new ChatComponentText("/sig newIsland <type>"));
-            sender.addChatMessage(new ChatComponentText("/sig newIsland <type> <dim>"));
         }
         else if (args[0].equalsIgnoreCase("listTypes"))
         {
@@ -55,44 +53,20 @@ public class CommandGenerate extends CommandBase
                 }
             }
         }
-        else if(args[0].equalsIgnoreCase("newIsland"))
+        else if (args[0].equalsIgnoreCase("newIsland") && sender instanceof EntityPlayer)
         {
             if (sender instanceof EntityPlayer && args.length < 2)
             {
                 sender.addChatMessage(new ChatComponentText("/sig newIsland <type>"));
-            }
-            else if(args.length < 3)
-            {
-                sender.addChatMessage(new ChatComponentText("/sig newIsland <type> <dim>"));
             }
             else if (IslandManager.INSTANCE.islandTypeMap.containsKey(args[1]))
             {
                 IslandGenerator generator = IslandManager.INSTANCE.islandTypeMap.get(args[1]);
                 if (generator != null)
                 {
-                    World world = sender.getEntityWorld();
-                    if (args.length == 3)
+                    if (!IslandManager.INSTANCE.newIsland((EntityPlayer) sender, args[1], true))
                     {
-                        try
-                        {
-                            world = DimensionManager.getWorld(Integer.parseInt(args[4]));
-
-                        } catch (NumberFormatException e)
-                        {
-                            sender.addChatMessage(new ChatComponentText("Error: can't parse " + args[4] + " whole number"));
-                        }
-                    }
-                    if (world != null)
-                    {
-                        IslandLocation location = IslandManager.INSTANCE.getNewIslandLocation();
-                    }
-                    else if (args.length == 3)
-                    {
-                        sender.addChatMessage(new ChatComponentText("Error: unknown world for dim id " + args[4]));
-                    }
-                    else
-                    {
-                        sender.addChatMessage(new ChatComponentText("Error: World returned null"));
+                        sender.addChatMessage(new ChatComponentText("Error: Something went wrong while generating your new island"));
                     }
                 }
                 else
