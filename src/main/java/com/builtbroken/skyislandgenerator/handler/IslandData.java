@@ -9,13 +9,15 @@ import java.util.UUID;
  */
 public class IslandData
 {
-    String owner;
-    UUID ownerID;
+    public final IslandLocation location;
+    public final String owner;
+    public final UUID ownerID;
 
-    public IslandData(EntityPlayer player)
+    public IslandData(EntityPlayer player, IslandLocation location)
     {
-        owner = player.getCommandSenderName();
-        ownerID = player.getGameProfile().getId();
+        this.owner = player.getCommandSenderName();
+        this.ownerID = player.getGameProfile().getId();
+        this.location = location;
     }
 
     @Override

@@ -5,6 +5,8 @@ import com.builtbroken.skyislandgenerator.generator.IslandGenerator;
 import cpw.mods.fml.common.eventhandler.SubscribeEvent;
 import cpw.mods.fml.common.gameevent.TickEvent;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.util.ChatComponentText;
 import net.minecraft.util.ChunkCoordinates;
 import net.minecraft.util.MovingObjectPosition;
 import net.minecraft.util.Vec3;
@@ -12,10 +14,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.ForgeDirection;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * Created by Dark on 8/12/2015.
@@ -23,6 +22,7 @@ import java.util.List;
 public class IslandManager
 {
     public HashMap<IslandLocation, IslandData> islandMap = new HashMap();
+    public HashMap<UUID, IslandData> playerToIslandMap = new HashMap();
     public HashMap<String, IslandGenerator> islandTypeMap = new HashMap();
     public List<IslandLocation> nextLocations = new ArrayList();
 
@@ -51,8 +51,7 @@ public class IslandManager
         {
             islandTypeMap.put(name, gen);
             SkyIslandGenerator.LOGGER.info("Registered new island generator " + name);
-        }
-        else
+        } else
         {
             SkyIslandGenerator.LOGGER.error("A mod attempted to register a generator that is already registered. Name = " + name + " Clazz = " + gen);
         }
@@ -73,7 +72,10 @@ public class IslandManager
                 int originX = (location.x << 4) + 8;
                 int originZ = (location.z << 4) + 8;
 
+                //Shuffle location so we avoid going in the same direction each iteration
                 Collections.shuffle(dirs);
+
+                //Iterate over sides to find locations that could be valid
                 for (ForgeDirection dir : dirs)
                 {
                     System.out.println("\tD: " + dir);
@@ -115,24 +117,36 @@ public class IslandManager
 
     public boolean newIsland(EntityPlayer player, String chunkFlat, boolean random)
     {
-        IslandLocation l = getNewIslandLocation();
-        if (l != null)
+        SkyIslandGenerator.LOGGER.info("Attempting to generate new Island[" + chunkFlat + "] for " + player.getCommandSenderName());
+        IslandLocation location = getNewIslandLocation();
+        if (location != null)
         {
-            IslandLocation location = newIsland(player.worldObj, l, chunkFlat, random);
+            location = newIsland(player.worldObj, location, chunkFlat, random);
             if (location != null)
             {
-                int x = (l.x << 4) + 8;
-                int z = (l.z << 4) + 8;
-                int y = 0;
+                int x = (location.x << 4) + 8;
+                int z = (location.z << 4) + 8;
                 islandMap.put(location, new IslandData(player));
-                MovingObjectPosition mop = player.worldObj.rayTraceBlocks(Vec3.createVectorHelper(x + 0.5, 255, z + 0.5), Vec3.createVectorHelper(x + 0.5, 0, z + 0.5));
-                if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
+                playerToIslandMap.put(player.getGameProfile().getId(), islandMap.get(location));
+                MovingObjectPosition mop = player.worldObj.rayTraceBlocks(Vec3.createVectorHelper(x + 0.5, 210, z + 0.5), Vec3.createVectorHelper(x + 0.5, 5, z + 0.5));
+                if (player.capabilities.isCreativeMode)
                 {
-                    player.setSpawnChunk(new ChunkCoordinates(x, mop.blockY + 1, z), true);
-                    player.setPositionAndUpdate(x, y, z);
+                    player.setPositionAndUpdate(x, SkyIslandGenerator.DEFAULT_Y_GENERATION_LEVEL + SkyIslandGenerator.MAX_RANDOM_Y + 1, z);
+                } else if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK)
+                {
+                    player.setSpawnChunk(new ChunkCoordinates(x, mop.blockY + 2, z), true);
+                    player.setPositionAndUpdate(x, mop.blockY + 2, z);
+                    player.addChatComponentMessage(new ChatComponentText("Welcome to your new island"));
+                } else
+                {
+                    player.addChatComponentMessage(new ChatComponentText("Failed to find a safe place to teleport you to the island"));
+                    SkyIslandGenerator.LOGGER.info("\tFailed to raytrace a safe location to teleport the player[" + player.getCommandSenderName() + "] to the island at " + x + "x " + z + "z");
                 }
                 return true;
             }
+        } else
+        {
+            SkyIslandGenerator.LOGGER.info("\tNo new locations cached to generate");
         }
         return false;
     }
@@ -144,6 +158,8 @@ public class IslandManager
 
     public IslandLocation newIsland(World worldObj, IslandLocation location, String chunkFlat, boolean random)
     {
+        SkyIslandGenerator.LOGGER.info("Generating Island[" + chunkFlat + "]");
+        long start = System.nanoTime();
         if (islandTypeMap.containsKey(chunkFlat))
         {
             IslandGenerator gen = islandTypeMap.get(chunkFlat);
@@ -153,7 +169,15 @@ public class IslandManager
                 gen.generate(worldObj, location.x, location.z);
 
             islandMap.put(location, null);
+            if (nextLocations.contains(location))
+                nextLocations.remove(location);
+
+            //TODO convert into seconds and mili-seconds
+            SkyIslandGenerator.LOGGER.info("\tDone Generating. Took " + (System.nanoTime() - start) + " nano seconds");
             return location;
+        } else
+        {
+            SkyIslandGenerator.LOGGER.info("\t" + chunkFlat + " is not a valid island generator type");
         }
         return null;
     }
