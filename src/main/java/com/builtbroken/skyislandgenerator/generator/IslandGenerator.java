@@ -18,5 +18,10 @@ public abstract class IslandGenerator
         generate(world, (chunkX << 4) + 8, y, (chunkZ << 4) + 8);
     }
 
+    public void generateNoRandom(World world, int chunkX, int chunkZ)
+    {
+        generate(world, (chunkX << 4) + 8, SkyIslandGenerator.DEFAULT_Y_GENERATION_LEVEL, (chunkZ << 4) + 8);
+    }
+
     public abstract void generate(World world, int x, int y, int z);
 }
