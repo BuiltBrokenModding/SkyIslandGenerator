@@ -10,6 +10,7 @@ import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.IChunkProvider;
 import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class ChunkProviderEmpty implements IChunkProvider
@@ -100,10 +101,8 @@ public class ChunkProviderEmpty implements IChunkProvider
         chunk.generateSkylightMap();
 
         //Set biome ID for chunk
-        for (int l = 0; l < chunk.getBiomeArray().length; ++l)
-        {
-            chunk.getBiomeArray()[l] = (byte) 1;
-        }
+        byte[] abyte1 = chunk.getBiomeArray();
+        Arrays.fill(abyte1, (byte)1);
 
         chunk.generateSkylightMap();
         return chunk;
